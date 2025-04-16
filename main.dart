@@ -1,134 +1,173 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:http/http.dart' as http;
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HomeScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
+void main() {
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: StylishCourseForm(),
+  ));
 }
 
-class HomeScreen extends StatelessWidget {
+class StylishCourseForm extends StatefulWidget {
+  @override
+  _StylishCourseFormState createState() => _StylishCourseFormState();
+}
+
+class _StylishCourseFormState extends State<StylishCourseForm> {
+  final TextEditingController idController = TextEditingController();
+  final TextEditingController marksController = TextEditingController();
+  final TextEditingController fetchedDataController = TextEditingController();
+
+  String? selectedCourse;
+  String? selectedSemester;
+  String? selectedCreditHour;
+
+  final List<String> courses = ['Psychology', 'Computer Science', 'IT', 'English'];
+  final List<String> semesters = List.generate(8, (index) => '${index + 1}');
+  final List<String> creditHours = List.generate(5, (index) => '${index + 1}');
+
+  @override
+  void initState() {
+    super.initState();
+    idController.addListener(() {
+      if (idController.text.isNotEmpty) {
+        fetchCourses(); // Automatically fetch data on ID input
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    idController.dispose();
+    marksController.dispose();
+    fetchedDataController.dispose();
+    super.dispose();
+  }
+
+  Future<void> fetchCourses() async {
+    final id = idController.text;
+    if (id.isEmpty) return;
+
+    final url = Uri.parse('https://bgnuerp.online/api/get_courses?id=$id');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final result = json.decode(response.body);
+      fetchedDataController.text = jsonEncode(result);
+    } else {
+      fetchedDataController.text = 'Failed to fetch data.';
+    }
+  }
+
+  Future<void> submitData() async {
+    final id = idController.text;
+    final marks = marksController.text;
+
+    if (id.isEmpty || selectedCourse == null || selectedSemester == null || selectedCreditHour == null || marks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields')));
+      return;
+    }
+
+    final url = Uri.parse('https://bgnuerp.online/api/get_courses'); // replace with your post endpoint if different
+    final response = await http.post(url, body: {
+      'id': id,
+      'course_name': selectedCourse,
+      'semester_no': selectedSemester,
+      'credit_hours': selectedCreditHour,
+      'marks': marks,
+    });
+
+    if (response.statusCode == 200) {
+      final result = json.decode(response.body);
+      fetchedDataController.text = jsonEncode(result);
+    } else {
+      fetchedDataController.text = 'Failed to add data.';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('QR Generator & Scanner')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              child: Text('Generate QR Code'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => QRGeneratorScreen()),
-                );
-              },
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              child: Text('Scan QR Code'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => QRScannerScreen()),
-                );
-              },
-            ),
-          ],
-        ),
+      backgroundColor: Colors.purple.shade50,
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        title: Text('Course Form', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
-    );
-  }
-}
-
-class QRGeneratorScreen extends StatefulWidget {
-  @override
-  _QRGeneratorScreenState createState() => _QRGeneratorScreenState();
-}
-
-class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
-  final TextEditingController _controller = TextEditingController();
-  String _qrData = "";
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('QR Generator')),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(labelText: "Enter text"),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _qrData = _controller.text;
-                });
-              },
-              child: Text('Generate QR'),
-            ),
-            SizedBox(height: 20),
-            if (_qrData.isNotEmpty)
-              QrImageView(
-                data: _qrData,
-                version: QrVersions.auto,
-                size: 200.0,
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              inputField(label: 'ID', controller: idController, icon: Icons.person),
+              dropdownField('Course Name', courses, selectedCourse, (val) => setState(() => selectedCourse = val)),
+              dropdownField('Semester No', semesters, selectedSemester, (val) => setState(() => selectedSemester = val)),
+              dropdownField('Credit Hours', creditHours, selectedCreditHour, (val) => setState(() => selectedCreditHour = val)),
+              inputField(label: 'Marks', controller: marksController, icon: Icons.score),
+              const SizedBox(height: 10),
+              button('Submit Data', submitData, Colors.green),
+              const SizedBox(height: 20),
+              TextField(
+                controller: fetchedDataController,
+                maxLines: 6,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'Fetched Data',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(),
+                ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
-}
 
-class QRScannerScreen extends StatefulWidget {
-  @override
-  _QRScannerScreenState createState() => _QRScannerScreenState();
-}
-
-class _QRScannerScreenState extends State<QRScannerScreen> {
-  String scannedText = "";
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('QR Scanner')),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 4,
-            child: MobileScanner(
-              onDetect: (capture) {
-                final barcode = capture.barcodes.first;
-                setState(() {
-                  scannedText = barcode.rawValue ?? "Failed to read QR";
-                });
-              },
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: Text(
-                scannedText.isEmpty ? "Scan something..." : "Scanned: $scannedText",
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ),
-        ],
+  Widget inputField({required String label, required TextEditingController controller, required IconData icon}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Colors.deepPurple),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       ),
+    );
+  }
+
+  Widget dropdownField(String label, List<String> items, String? selectedValue, Function(String?) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        value: selectedValue,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget button(String text, VoidCallback onPressed, Color color) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: onPressed,
+      child: Text(text, style: TextStyle(fontSize: 16, color: Colors.white)),
     );
   }
 }
