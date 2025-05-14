@@ -1,173 +1,397 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'button.dart';
+import 'text.dart';
+import 'show.dart';
+import 'enter.dart';
+import 'entershow.dart';
+import 'listview.dart';
+import 'login.dart';
 
 void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: StylishCourseForm(),
-  ));
+  runApp(const MyApp());
 }
 
-class StylishCourseForm extends StatefulWidget {
-  @override
-  _StylishCourseFormState createState() => _StylishCourseFormState();
-}
-
-class _StylishCourseFormState extends State<StylishCourseForm> {
-  final TextEditingController idController = TextEditingController();
-  final TextEditingController marksController = TextEditingController();
-  final TextEditingController fetchedDataController = TextEditingController();
-
-  String? selectedCourse;
-  String? selectedSemester;
-  String? selectedCreditHour;
-
-  final List<String> courses = ['Psychology', 'Computer Science', 'IT', 'English'];
-  final List<String> semesters = List.generate(8, (index) => '${index + 1}');
-  final List<String> creditHours = List.generate(5, (index) => '${index + 1}');
-
-  @override
-  void initState() {
-    super.initState();
-    idController.addListener(() {
-      if (idController.text.isNotEmpty) {
-        fetchCourses(); // Automatically fetch data on ID input
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    idController.dispose();
-    marksController.dispose();
-    fetchedDataController.dispose();
-    super.dispose();
-  }
-
-  Future<void> fetchCourses() async {
-    final id = idController.text;
-    if (id.isEmpty) return;
-
-    final url = Uri.parse('https://bgnuerp.online/api/get_courses?id=$id');
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      final result = json.decode(response.body);
-      fetchedDataController.text = jsonEncode(result);
-    } else {
-      fetchedDataController.text = 'Failed to fetch data.';
-    }
-  }
-
-  Future<void> submitData() async {
-    final id = idController.text;
-    final marks = marksController.text;
-
-    if (id.isEmpty || selectedCourse == null || selectedSemester == null || selectedCreditHour == null || marks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields')));
-      return;
-    }
-
-    final url = Uri.parse('https://bgnuerp.online/api/get_courses'); // replace with your post endpoint if different
-    final response = await http.post(url, body: {
-      'id': id,
-      'course_name': selectedCourse,
-      'semester_no': selectedSemester,
-      'credit_hours': selectedCreditHour,
-      'marks': marks,
-    });
-
-    if (response.statusCode == 200) {
-      final result = json.decode(response.body);
-      fetchedDataController.text = jsonEncode(result);
-    } else {
-      fetchedDataController.text = 'Failed to add data.';
-    }
-  }
+class ListViewScreen extends StatelessWidget {
+  const ListViewScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
-      appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
-        title: Text('Course Form', style: TextStyle(color: Colors.white)),
-        centerTitle: true,
+      appBar: AppBar(title: const Text('List View')),
+      body: ListView.builder(
+        itemCount: 6,
+        itemBuilder: (context, index) {
+          return buildContainer(index);
+        },
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              inputField(label: 'ID', controller: idController, icon: Icons.person),
-              dropdownField('Course Name', courses, selectedCourse, (val) => setState(() => selectedCourse = val)),
-              dropdownField('Semester No', semesters, selectedSemester, (val) => setState(() => selectedSemester = val)),
-              dropdownField('Credit Hours', creditHours, selectedCreditHour, (val) => setState(() => selectedCreditHour = val)),
-              inputField(label: 'Marks', controller: marksController, icon: Icons.score),
-              const SizedBox(height: 10),
-              button('Submit Data', submitData, Colors.green),
-              const SizedBox(height: 20),
-              TextField(
-                controller: fetchedDataController,
-                maxLines: 6,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Fetched Data',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
+    );
+  }
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Welcome'),
+        ),
+        body: Center(
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+            },
+            child: const Text('Go to Login'),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget inputField({required String label, required TextEditingController controller, required IconData icon}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: Colors.deepPurple),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+@override
+Widget build(BuildContext context) {
+  return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      primarySwatch: Colors.blue,
+      brightness: Brightness.light,
+    ),
+    home: const HomePage(),
+  );
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
+  final List<Widget> _pages = [
+    const HomeScreen(),
+    const AboutPage(),
+    const CalculatorPage(),
+    const GradeBookPage(),
+    const Screen1(),
+    const Screen2(),
+    const Screen3(),
+    EnterScreen(),
+    EnterShowScreen(email: "", phone: "", status: ""),
+    const ListViewScreen(),
+    const LoginScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset('assets/logo.png', height: 40),
+            const SizedBox(width: 10),
+            const Text("Baba Guru Nanak University"),
+          ],
         ),
+        backgroundColor: Colors.blue,
+      ),
+      drawer: AppDrawer(
+        onTap: (index) => setState(() => _selectedIndex = index),
+      ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: const Footer(),
+    );
+  }
+}
+
+class AppDrawer extends StatelessWidget {
+  final Function(int) onTap;
+  const AppDrawer({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.blue),
+            child: Column(
+              children: [
+                Image.asset('assets/logo.png', height: 60),
+                const SizedBox(height: 10),
+                const Text(
+                  "BGNU Navigation",
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ],
+            ),
+          ),
+          ListTile(title: const Text("Home"), onTap: () => onTap(0)),
+          ListTile(title: const Text("About"), onTap: () => onTap(1)),
+          ListTile(title: const Text("Calculator"), onTap: () => onTap(2)),
+          ListTile(title: const Text("Grade Book"), onTap: () => onTap(3)),
+          ListTile(title: const Text("List"), onTap: () => onTap(4)),
+          ListTile(
+            title: const Text("Enter Data"),
+            onTap: () => onTap(7),
+          ),
+          ListTile(
+            title: const Text("View Data"),
+            onTap: () => onTap(8),
+          ),
+          ListTile(
+            title: const Text("Button"),
+            onTap: () => onTap(4),
+          ),
+          ListTile(
+            title: const Text("TextBox"),
+            onTap: () => onTap(5),
+          ),
+          ListTile(
+            title: const Text("Show"),
+            onTap: () => onTap(6),
+          ),
+          ListTile(
+            title: const Text("List View"),
+            onTap: () => onTap(9),
+          ),
+          ListTile(
+            title: const Text("Login"),
+            onTap: () {
+              onTap(10); // This will navigate to LoginScreen
+              Navigator.pop(context); // Close the drawer
+            },
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget dropdownField(String label, List<String> items, String? selectedValue, Function(String?) onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: DropdownButtonFormField<String>(
-        value: selectedValue,
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
+class Footer extends StatelessWidget {
+  const Footer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black,
+      padding: const EdgeInsets.all(10),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Contact Us",
+            style: TextStyle(
+              color: Colors.yellow,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            "Address: Adampur Road, Nankana Sahib, Pakistan",
+            style: TextStyle(color: Colors.white),
+          ),
+          Text("Phone: +123 456 789", style: TextStyle(color: Colors.white)),
+          Text(
+            "Email: info@bgnuniversity.com",
+            style: TextStyle(color: Colors.white),
+          ),
+          Text(
+            "© 2025 Baba Guru Nanak University. All rights reserved.",
+            style: TextStyle(color: Colors.yellow, fontSize: 12),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget button(String text, VoidCallback onPressed, Color color) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset('assets/logo.png', height: 100),
+          const SizedBox(height: 20),
+          const Text(
+            "Welcome to Baba Guru Nanak University!",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          Image.asset('assets/vc_sahib.jpg', height: 150),
+        ],
       ),
-      onPressed: onPressed,
-      child: Text(text, style: TextStyle(fontSize: 16, color: Colors.white)),
+    );
+  }
+}
+
+class AboutPage extends StatelessWidget {
+  const AboutPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Image.asset('assets/vc_sahib.jpg', height: 200),
+          const SizedBox(height: 20),
+          const Text(
+            "Baba Guru Nanak University is dedicated to providing quality education and fostering innovation. We aim to build a future-ready generation through academic excellence and research.",
+            style: TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GradeBookPage extends StatelessWidget {
+  const GradeBookPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const Text(
+            "Grade Book",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          DataTable(
+            columns: const [
+              DataColumn(label: Text("Name")),
+              DataColumn(label: Text("Subject")),
+              DataColumn(label: Text("Grade")),
+            ],
+            rows: const [
+              DataRow(
+                cells: [
+                  DataCell(Text("Churail")),
+                  DataCell(Text("Math")),
+                  DataCell(Text("A")),
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Text("Atma")),
+                  DataCell(Text("PF")),
+                  DataCell(Text("B+")),
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Text("Jin")),
+                  DataCell(Text("Oops")),
+                  DataCell(Text("A-")),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CalculatorPage extends StatefulWidget {
+  const CalculatorPage({super.key});
+
+  @override
+  _CalculatorPageState createState() => _CalculatorPageState();
+}
+
+class _CalculatorPageState extends State<CalculatorPage> {
+  TextEditingController value1Controller = TextEditingController();
+  TextEditingController value2Controller = TextEditingController();
+  String result = "";
+
+  void calculate(String operation) {
+    double num1 = double.tryParse(value1Controller.text) ?? 0;
+    double num2 = double.tryParse(value2Controller.text) ?? 0;
+    double res = 0;
+
+    switch (operation) {
+      case '+':
+        res = num1 + num2;
+        break;
+      case '-':
+        res = num1 - num2;
+        break;
+      case '*':
+        res = num1 * num2;
+        break;
+      case '/':
+        res =
+            num2 != 0 ? num1 / num2 : double.infinity; // Avoid division by zero
+        break;
+    }
+
+    setState(() {
+      result = "Result: $res";
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextField(
+            controller: value1Controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: "Enter first number"),
+          ),
+          TextField(
+            controller: value2Controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: "Enter second number"),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () => calculate('+'),
+                child: const Text("+"),
+              ),
+              ElevatedButton(
+                onPressed: () => calculate('-'),
+                child: const Text("-"),
+              ),
+              ElevatedButton(
+                onPressed: () => calculate('*'),
+                child: const Text("*"),
+              ),
+              ElevatedButton(
+                onPressed: () => calculate('/'),
+                child: const Text("/"),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            result,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
     );
   }
 }
