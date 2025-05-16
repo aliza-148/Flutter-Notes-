@@ -1,0 +1,85 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // 👈 Required for Firebase
+import 'question1.dart'; // 👈 Your first screen
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // 👈 Required before Firebase.init
+  await Firebase.initializeApp(); // 👈 Initializes Firebase
+
+  runApp(MaterialApp(
+    home: QuestionOneScreen(), // 👈 Starts your app from this screen
+    debugShowCheckedModeBanner: false,
+  ));
+}
+
+
+
+
+
+
+
+//
+// import 'package:flutter/material.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'firebase_lab.dart'; // Make sure FirebaseFormPage is defined here
+//
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp(); // Firebase initialization
+//   runApp(const MyApp());
+// }
+//
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       title: 'Firebase Form Demo',
+//       theme: ThemeData(
+//         primarySwatch: Colors.blue,
+//       ),
+//       home: const FirebaseFormPage(), // ✅ Load your form page here
+//     );
+//   }
+// }
+
+
+//
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'login.dart';
+//
+// void main() {
+//   runApp(MaterialApp(
+//     home: LoginPage(),
+//   ));
+// }
+//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

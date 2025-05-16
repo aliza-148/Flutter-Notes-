@@ -1,0 +1,49 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class Question4Screen extends StatefulWidget {
+  @override
+  _Question4ScreenState createState() => _Question4ScreenState();
+}
+
+class _Question4ScreenState extends State<Question4Screen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  List<Map<String, dynamic>> sampleData = [
+    {'title': 'List 1', 'items': ['Flutter', 'Firebase', 'Dart']},
+    {'title': 'List 2', 'items': ['Apple', 'Banana', 'Orange']},
+    {'title': 'List 3', 'items': ['Math', 'Physics', 'Chemistry']},
+    {'title': 'List 4', 'items': ['Lion', 'Tiger', 'Bear']},
+    {'title': 'List 5', 'items': ['Red', 'Blue', 'Green']},
+  ];
+
+  void uploadData() async {
+    try {
+      for (var list in sampleData) {
+        await _firestore.collection('question4_lists').add(list);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('🔥 5 Lists Saved to Firebase!')),
+      );
+    } catch (e) {
+      print("Firebase error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Failed to save data')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Question 4 - Save to Firebase")),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: uploadData,
+          child: Text("Save Sample Lists to Firebase"),
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,72 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class DisplayDataScreen extends StatefulWidget {
+  @override
+  _DisplayDataScreenState createState() => _DisplayDataScreenState();
+}
+
+class _DisplayDataScreenState extends State<DisplayDataScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> _records = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFirebaseData();
+  }
+
+  void _fetchFirebaseData() async {
+    try {
+      QuerySnapshot snapshot =
+      await _firestore.collection('question4_lists').get();
+
+      final data = snapshot.docs.map((doc) {
+        return {
+          'title': doc['title'],
+          'items': List<String>.from(doc['items']),
+        };
+      }).toList();
+
+      setState(() {
+        _records = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error fetching data: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Database Records")),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : _records.isEmpty
+          ? Center(child: Text("No Data Found"))
+          : ListView.builder(
+        itemCount: _records.length,
+        itemBuilder: (context, index) {
+          final list = _records[index];
+          return Card(
+            margin: EdgeInsets.all(8),
+            child: ListTile(
+              title: Text(list['title'], style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List<Widget>.from(
+                  list['items'].map<Widget>((item) => Text("- $item")),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

@@ -1,0 +1,95 @@
+import 'package:flutter/material.dart';
+
+class QuestionTwoScreen extends StatelessWidget {
+  final List<Map<String, dynamic>> subjects = [
+    {
+      'subject': 'mobile application development ',
+      'teacher': 'Sir Nabeel',
+      'credit': 3,
+    },
+    {
+      'subject': 'Database Systems',
+      'teacher': 'Sir Khalid  ',
+      'credit': 3,
+    },
+    {
+      'subject': 'Artificial Intelligence',
+      'teacher': 'Sir Shehzad',
+      'credit': 4,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('My University App'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.deepPurple),
+              child: Center(
+                child: Text(
+                  'Welcome Student',
+                  style: TextStyle(color: Colors.white, fontSize: 22),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text('Home'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
+            ),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Logout'),
+            ),
+          ],
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Image.asset(
+              'assets/download.jpeg',
+              height: 150,
+              fit: BoxFit.cover,
+            ),
+
+            SizedBox(height: 20),
+            Text(
+              'Enrolled Subjects',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: subjects.length,
+                itemBuilder: (context, index) {
+                  final subject = subjects[index];
+                  return Card(
+                    elevation: 4,
+                    margin: EdgeInsets.symmetric(vertical: 8),
+                    child: ListTile(
+                      title: Text(subject['subject']),
+                      subtitle: Text('Teacher: ${subject['teacher']}\nCredits: ${subject['credit']}'),
+                      isThreeLine: true,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

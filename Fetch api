@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class ApiDataFetchScreen extends StatefulWidget {
+  @override
+  _ApiDataFetchScreenState createState() => _ApiDataFetchScreenState();
+}
+
+class _ApiDataFetchScreenState extends State<ApiDataFetchScreen> {
+  List<dynamic> comments = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchComments();
+  }
+
+  Future<void> fetchComments() async {
+    final url = Uri.parse('https://jsonplaceholder.typicode.com/comments?postId=1');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          comments = data;
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      print('Error: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("API Data Fetch")),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : comments.isEmpty
+          ? Center(child: Text("No comments found."))
+          : ListView.builder(
+        itemCount: comments.length,
+        itemBuilder: (context, index) {
+          final comment = comments[index];
+          return ListTile(
+            title: Text(comment['name']),
+            subtitle: Text(comment['body']),
+            trailing: Text(comment['email']),
+          );
+        },
+      ),
+    );
+  }
+}

@@ -1,0 +1,170 @@
+import 'package:flutter/material.dart';
+import 'database_helper.dart'; // helper file import
+import 'question2.dart';  // Make sure tu ye files banaye hue hain
+import 'question3.dart';  // Make sure tu ye files banaye hue hain
+import 'question4.dart';  // Make sure tu ye files banaye hue hain
+import 'api_data_fetch.dart';  // Make sure tu ye files banaye hue hain
+
+
+void main() {
+  runApp(MaterialApp(
+    home: QuestionOneScreen(),
+    debugShowCheckedModeBanner: false,
+  ));
+}
+
+class QuestionOneScreen extends StatefulWidget {
+  @override
+  _QuestionOneScreenState createState() => _QuestionOneScreenState();
+}
+
+class _QuestionOneScreenState extends State<QuestionOneScreen> {
+  final TextEditingController _controller = TextEditingController();
+  List<Map<String, dynamic>> _texts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTexts();
+  }
+
+  void _loadTexts() async {
+    List<Map<String, dynamic>> list = await DatabaseHelper().getAllTexts();
+    setState(() {
+      _texts = list;
+    });
+  }
+
+  void _saveText() async {
+    String input = _controller.text.trim();
+    if (input.isEmpty) return;
+
+    await DatabaseHelper().insertText(input);
+    _controller.clear();
+    _loadTexts();
+  }
+
+  void _navigateTo(Widget screen) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => screen),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("SQLite Save Text")),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(color: Colors.deepPurple),
+              child: Center(
+                child: Text(
+                  'Menu',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.save),
+              title: Text('Question 1 - Save Text'),
+              onTap: () {
+                Navigator.pop(context);
+                // Already on Question 1 screen, so no navigation
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.school),
+              title: Text('Question 2 - Subjects List'),
+              onTap: () {
+                Navigator.pop(context);
+                _navigateTo(QuestionTwoScreen());
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.data_object),
+              title: Text('Question 3'),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Question4Screen()),
+              ),
+            ),
+
+            ListTile(
+              leading: Icon(Icons.data_object),
+              title: Text('Question 4'),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DisplayDataScreen()),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.data_object),
+              title: Text('data fetched from api'),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ApiDataFetchScreen()),
+              ),
+            ),
+            // ListTile(
+            //   leading: Icon(Icons.code),
+            //   title: Text('Question 3'),
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     _navigateTo(QuestionThreeScreen());
+            //   },
+            // ),
+            // ListTile(
+            //   leading: Icon(Icons.task),
+            //   title: Text('Question 4'),
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     _navigateTo(QuestionFourScreen());
+            //   },
+            // ),
+            // ListTile(
+            //   leading: Icon(Icons.done),
+            //   title: Text('Question 5'),
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     _navigateTo(QuestionFiveScreen());
+            //   },
+            // ),
+          ],
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: "Enter Text",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _saveText,
+              child: Text("Save"),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _texts.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(_texts[index]['content']),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
